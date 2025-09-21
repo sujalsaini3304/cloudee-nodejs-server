@@ -2,6 +2,7 @@ import express from "express";
 import router from "./routes.js";
 import { configDotenv } from "dotenv";
 
+
 const app = express();
 configDotenv({
     path:".env"
@@ -10,7 +11,7 @@ configDotenv({
 app.use("/" , router )
 
 app.listen(process.env.PORT , (req,res)=>{
-    console.log("Nodejs server started");
+    console.log("Nodejs server started.");
 })
 
 

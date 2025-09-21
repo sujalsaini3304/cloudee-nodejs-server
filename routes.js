@@ -4,7 +4,7 @@ const router = express.Router()
 
 router.get("/" , (req,res)=>{
   res.status(200).json({
-    "message" : "Nodejs server started",
+    "message" : "Nodejs server started.",
     "status" : 200,
   })
 })

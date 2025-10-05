@@ -47,19 +47,37 @@ router.get("/", (req, res) => {
   });
 });
 
-router.post("/api/get/data", async (req, res) => {
-  try {
-    const { email, page = 1, limit = 20 } = req.body; // Form-data or JSON
+router.post("/api/get/data", (req, res) => {
+  if (req.is("multipart/form-data")) {
+    const form = formidable();
+    form.parse(req, (err, fields, files) => {
+      if (err) {
+        return res.status(400).json({ error: "Form parsing error" });
+      }
+      const email = fields.email;
+      const page = fields.page || 1;
+      const limit = fields.limit || 50;
+      handleDataRequest(email, page, limit, res);
+    });
+  } else {
+    const email = req.body.email;
+    const page = req.body.page || 1;
+    const limit = req.body.limit || 50;
+    handleDataRequest(email, page, limit, res);
+  }
+});
 
+async function handleDataRequest(email, page, limit, res) {
+  try {
     if (!email) {
       return res.status(400).json({ error: "Email is required" });
     }
-
+    email = email[0];
+    page = page[0];
+    limit = limit[0];
     const collection = db.collection("asset");
     const collectionUser = db.collection("user");
-
     const skip = (Number(page) - 1) * Number(limit);
-
     // Paginated documents
     const documents = await collection
       .find({ email })
@@ -67,10 +85,9 @@ router.post("/api/get/data", async (req, res) => {
       .skip(skip)
       .limit(Number(limit))
       .toArray();
-
     // User info (no pagination)
     const userDocs = await collectionUser.find({ email }).limit(1).toArray();
-
+    console.log(userDocs);
     // Format documents
     for (const doc of documents) {
       doc._id = doc._id.toString();
@@ -78,7 +95,6 @@ router.post("/api/get/data", async (req, res) => {
         doc.created_at = convertToLocalTimezone(doc.created_at);
       }
     }
-
     // Format user
     let user = null;
     if (userDocs.length > 0) {
@@ -89,16 +105,21 @@ router.post("/api/get/data", async (req, res) => {
       }
       removeKey(user, "password");
     }
-
+    // Debug point
+    // console.log({
+    //   data: documents,
+    //   user_detail: user,
+    // })
     return res.json({
       data: documents,
       user_detail: user,
+      selection_limit: 5,
     });
   } catch (err) {
     console.error("Error fetching data:", err);
     return res.status(500).json({ error: "Internal Server Error" });
   }
-});
+}
 
 // Sending email to verify user.
 router.post("/api/send/confirmation/email", (req, res) => {
@@ -518,10 +539,10 @@ router.post("/api/delete/asset", async (req, res) => {
 
       // Delete from MongoDB
       const dbRes = await collection.deleteOne({
-        _id: new ObjectId(item.mongo_id),
+        _id: new ObjectId(item._id),
       });
       if (dbRes.deletedCount > 0) {
-        deleted_from_db.push(item.mongo_id);
+        deleted_from_db.push(item._id);
       }
     } catch (err) {
       console.error(`Error deleting ${item.public_id} : `, err);

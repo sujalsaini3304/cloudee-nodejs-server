@@ -122,7 +122,7 @@ async function handleDataRequest(email, page, limit, res) {
 }
 
 // Sending email to verify user.
-router.post("/api/send/confirmation/email", (req, res) => {
+router.post("/api/send/confirmation/email", async(req, res) => {
   if (req.method !== "POST")
     return res.status(405).json({ message: "Method not allowed" });
 
@@ -168,7 +168,7 @@ router.post("/api/send/confirmation/email", (req, res) => {
           </table>
         </body>
       </html>`;
-    sendEmailFunction(email, subject, message);
+    await sendEmailFunction(email, subject, message);
     res.status(200).json({
       message: "Verification email send successfully.",
       code: code,
@@ -247,7 +247,7 @@ router.post("/api/send/email/password/reset", async (req, res) => {
           </table>
         </body>
       </html>`;
-    sendEmailFunction(email, subject, message);
+    await sendEmailFunction(email, subject, message);
     return res.status(200).json({
       message: "Password reset email sent successfully.",
       code,

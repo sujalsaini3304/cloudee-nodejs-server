@@ -272,7 +272,7 @@ router.post("/api/update/password", async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
       return res
-        .status(400)
+        .status(200)
         .json({ message: "Email and password are required." });
     }
 
@@ -282,14 +282,14 @@ router.post("/api/update/password", async (req, res) => {
     const user = await collection.findOne({ email });
     if (!user) {
       return res
-        .status(404)
+        .status(200)
         .json({ status: "Failed", message: "User not found.", flag: false });
     }
 
     // Check if the new password is same as old password
     const isSamePassword = await bcrypt.compare(password, user.password);
     if (isSamePassword) {
-      return res.status(400).json({
+      return res.status(200).json({
         status: "Failed",
         message: "Using the old password.",
         flag: false,
